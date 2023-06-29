@@ -1,0 +1,21 @@
+{
+  "@schema": "https://json.schemastore.org/tsconfig.json",
+  "extends": "@vue/tsconfig/tsconfig.json",
+  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "moduleResolution": "node",
+    "strict": true,
+    "target": "es2022",
+    "sourceMap": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["naive-ui/volar"]
+  },
+  "references": [
+    {
+      "path": "./tsconfig.vite-config.json"
+    }
+  ]
+}
