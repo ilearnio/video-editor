@@ -39,7 +39,7 @@ const getters = {
 </script>
 
 <template>
-  <AudioPlayer
+  <audio-player
     class="audio-player"
     :src="getters.audioFileUrl.value"
     :name="extractAudioPlainText(audio)"
@@ -58,16 +58,16 @@ const getters = {
       <n-tooltip v-if="invalidReason" trigger="hover" placement="bottom">
         <template #trigger>
           <div class="info-icon-wrapper">
-            <InfoIcon class="info-icon" />
+            <info-icon class="info-icon" />
           </div>
         </template>
         {{ invalidReason }}
       </n-tooltip>
       <a class="remove-link" title="Remove" @click="emit('remove')">
-        <RemoveIcon class="remove-icon" />
+        <remove-icon class="remove-icon" />
       </a>
     </template>
-  </AudioPlayer>
+  </audio-player>
 </template>
 
 <style scoped lang="scss">

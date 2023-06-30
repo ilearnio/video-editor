@@ -34,7 +34,7 @@ const getters = {
 </script>
 
 <template>
-  <AudioPlayer
+  <audio-player
     class="audio-player"
     :src="getters.audioFileUrl.value"
     :name="getters.readableFileName.value"
@@ -42,10 +42,10 @@ const getters = {
   >
     <template #right>
       <a class="remove-link" title="Remove" @click="emit('remove')">
-        <RemoveIcon class="remove-icon" />
+        <remove-icon class="remove-icon" />
       </a>
     </template>
-  </AudioPlayer>
+  </audio-player>
 </template>
 
 <style scoped lang="scss">

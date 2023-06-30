@@ -46,8 +46,10 @@ const methods = {
       audio,
     )
   },
-  async handleChange(id: string) {
-    await videoQuoteAudiosStore.actions.selectAudioId(id)
+  async handleChange(audioId: string) {
+    const quoteId = videoQuotesStore.state.activeVideoQuoteId
+    await videoQuoteAudiosStore.actions.selectAudioId(audioId)
+    videoQuotesStore.actions.setVideoQuoteProperty(quoteId, 'selectedAudioId', audioId)
   },
   async removeAudio(audio: VideoQuoteAudio) {
     await videoQuoteAudiosStore.actions.removeVideoQuoteAudio(audio.id!)
@@ -128,7 +130,7 @@ onBeforeMount(async () => {
             :key="audio.id"
             class="audio"
           >
-            <VideoQuoteAudioCard
+            <video-quote-audio-card
               :audio="audio"
               :checked="audio.id === videoQuotesStore.getters.activeVideoQuote.selectedAudioId"
               :invalid-reason="methods.getInvalidReason(audio)"
