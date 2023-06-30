@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -89,7 +89,7 @@ func findExistingEnvPaths() []string {
 
 	var envFilePaths []string
 	for _, envFile := range envFileNames {
-		fullPath := path.Join(CWD_PATH, envFile)
+		fullPath := filepath.Join(CWD_PATH, envFile)
 		if helpers.FileExists(fullPath) {
 			envFilePaths = append(envFilePaths, fullPath)
 		}

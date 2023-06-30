@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"io"
 	"os"
 	"strings"
 )
@@ -39,4 +40,25 @@ func BuildSafeFileName(text string, maxLength int, extension string) string {
 func FileExists(name string) bool {
 	_, err := os.Stat(name)
 	return err == nil
+}
+
+func CopyFile(sourcePath, destPath string) error {
+	sourceFile, err := os.Open(sourcePath)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+
+	destFile, err := os.Create(destPath)
+	if err != nil {
+		return err
+	}
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, sourceFile)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

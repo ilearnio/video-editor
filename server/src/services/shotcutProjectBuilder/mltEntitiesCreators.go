@@ -3,7 +3,6 @@ package shotcutProjectBuilder
 import (
 	"fmt"
 	"html/template"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -28,7 +27,7 @@ func createChainMltEntityForAudioAsset(
 		Children: []XMLConvertible{
 			Property{"length", helpers.ShotcutFormatDuration(audio.Duration)},
 			Property{"eof", "pause"},
-			Property{"resource", path.Join(resourseDir, filepath.Base(audio.Path))},
+			Property{"resource", filepath.Join(resourseDir, filepath.Base(audio.Path))},
 			Property{"mlt_service", "avformat-novalidate"},
 			Property{"seekable", "1"},
 			Property{"audio_index", "0"},

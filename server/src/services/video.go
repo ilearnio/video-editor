@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"sync"
 	"time"
@@ -77,7 +76,7 @@ func videoQuotesBuildMlt(
 	quoteAudioAssets := make([]shotcutProjectBuilder.AssetAudio, len(audios))
 	for index, audio := range audios {
 		quoteAudioAssets[index] = shotcutProjectBuilder.AssetAudio{
-			Path:     path.Join("quotes", fmt.Sprint(index, "_", audio.AudioFile)),
+			Path:     filepath.Join("quotes", fmt.Sprint(index, "_", audio.AudioFile)),
 			Duration: time.Duration(int64(audios[index].Duration) * int64(time.Millisecond)),
 		}
 	}
@@ -147,7 +146,7 @@ func videoDownloadFile(video *models.Video, baseDir, fileName string) error {
 	url := videoFileGetUrl(video, fileName)
 	destinationPath := videoFileGetDownloadPath(baseDir, fileName)
 
-	err := utils.DownloadFile(url, destinationPath)
+	err := utils.DownloadFile(url, destinationPath, true)
 	if err != nil {
 		return fmt.Errorf("videoDownloadFile: %v", err)
 	}

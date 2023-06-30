@@ -2,7 +2,7 @@ package services
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 	"sync"
 
 	"github.com/pocketbase/pocketbase"
@@ -13,7 +13,7 @@ import (
 )
 
 func videoQuoteAudioFilesDestinationPath(videoId string) string {
-	return path.Join(videoFilesDestinationPath(videoId), "quotes")
+	return filepath.Join(videoFilesDestinationPath(videoId), "quotes")
 }
 
 func videoQuoteAudioFileGetUrl(audio *models.VideoQuoteAudio) string {
@@ -34,7 +34,7 @@ func videoQuoteAudioFileGetDownloadPath(
 func videoQuoteAudioDownloadFile(audio *models.VideoQuoteAudio, destinationPath string) error {
 	url := videoQuoteAudioFileGetUrl(audio)
 
-	err := utils.DownloadFile(url, destinationPath)
+	err := utils.DownloadFile(url, destinationPath, true)
 	if err != nil {
 		return fmt.Errorf("videoQuoteAudioDownloadFile: %v", err)
 	}

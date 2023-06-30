@@ -47,7 +47,7 @@ var _ = Describe("Shotcut Project Builder", Ordered, func() {
 </mlt>`))
 	})
 
-	FIt("should build entire .mlt file", func() {
+	It("should build entire .mlt file", func() {
 		backgroundImagePath := "slides/bg.jpg"
 		introImagePath := "/Users/admin/Documents/Videos/assets/intro/motivation-daily-intro.jpg"
 		outroImagePath := "/Users/admin/Documents/Videos/assets/outro/motivations-daily-outro.jpg"
