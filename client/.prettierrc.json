@@ -10,5 +10,13 @@
     "^[./]"
   ],
   "importOrderSeparation": true,
-  "importOrderSortSpecifiers": true
+  "importOrderSortSpecifiers": true,
+  "overrides": [
+    {
+      "files": "**/*.test.ts",
+      "options": {
+        "printWidth": 120
+      }
+    }
+  ]
 }

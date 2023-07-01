@@ -1,11 +1,11 @@
-import { fileURLToPath, URL } from "url";
-
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
-import vueJsx from "@vitejs/plugin-vue-jsx";
-import Components from "unplugin-vue-components/vite";
-import vueI18n from '@intlify/vite-plugin-vue-i18n'
 import path from 'path'
+import Components from 'unplugin-vue-components/vite'
+import { URL, fileURLToPath } from 'url'
+import { defineConfig } from 'vite'
+
+import vueI18n from '@intlify/vite-plugin-vue-i18n'
+import vue from '@vitejs/plugin-vue'
+import vueJsx from '@vitejs/plugin-vue-jsx'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -24,12 +24,12 @@ export default defineConfig({
     vueI18n({
       // if you want to use Vue I18n Legacy API, you need to set `compositionOnly: false`
       // compositionOnly: false,
-      include: path.resolve(__dirname, './locales/**')
-    })
+      include: path.resolve(__dirname, './locales/**'),
+    }),
   ],
   resolve: {
     alias: {
-      "@": fileURLToPath(new URL("./src", import.meta.url)),
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-});
+})

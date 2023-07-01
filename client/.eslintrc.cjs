@@ -22,4 +22,12 @@ module.exports = {
     'prettier/prettier': ['error', prettierConfig],
     '@typescript-eslint/no-non-null-assertion': 0,
   },
+  overrides: [
+    {
+      files: ['**/*.test.ts'],
+      rules: {
+        'prettier/prettier': ['error', prettierConfig.overrides[0]],
+      },
+    },
+  ],
 }
