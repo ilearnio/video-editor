@@ -19,8 +19,8 @@ import { useUserStore } from '@/stores/user'
 import { useVideoQuoteAudiosStore } from '@/stores/videoQuoteAudios'
 import { useVideoQuotesStore } from '@/stores/videoQuotes'
 
-const videoQuotesStore = useVideoQuotesStore()
-const videoQuoteAudiosStore = useVideoQuoteAudiosStore()
+const quotesStore = useVideoQuotesStore()
+const audiosStore = useVideoQuoteAudiosStore()
 const userStore = useUserStore()
 
 const dragHandleRefs = ref<HTMLElement[]>()
@@ -60,12 +60,12 @@ const data = reactive({
 
 const getters = {
   maxPosition: computed(() => {
-    const positions = videoQuotesStore.state.videoQuotes.map((quote) => quote.position)
+    const positions = quotesStore.state.videoQuotes.map((quote) => quote.position)
     return positions.sort((a, b) => b - a)[0] ?? -1
   }),
   quoteVoiceDetails: computed(() => (quote: VideoQuote) => {
     if (!quote.selectedAudioId) return ''
-    const selectedAudio = videoQuoteAudiosStore.state.videoQuoteAudios.find(
+    const selectedAudio = audiosStore.state.videoQuoteAudios.find(
       (a) => a.id === quote.selectedAudioId,
     )
     if (!selectedAudio) return ''
@@ -76,15 +76,17 @@ const getters = {
     return `${voice} - ${speed}x`
   }),
   getInvalidReason: computed(() => (quote: VideoQuote) => {
-    if (!quote.selectedAudioId) return ''
-    const selectedAudio = videoQuoteAudiosStore.state.videoQuoteAudios.find(
-      (a) => a.id === quote.selectedAudioId,
-    )
-    if (!selectedAudio) return 'Audio must be selected.'
+    const audios = audiosStore.state.videoQuoteAudios
+    const selectedAudio = audios.find((a) => a.id === quote.selectedAudioId)
+    if (audios.length > 0 && !selectedAudio) {
+      return 'Audio must be selected.'
+    }
+
+    if (!selectedAudio) return ''
 
     return getInvalidReason(
-      videoQuotesStore.state.videoQuotes,
-      videoQuoteAudiosStore.state.videoQuoteAudios,
+      quotesStore.state.videoQuotes,
+      audiosStore.state.videoQuoteAudios,
       selectedAudio,
     ) as string | undefined
   }),
@@ -92,8 +94,8 @@ const getters = {
 
 const methods = {
   async toggleHTML(quote: VideoQuote) {
-    videoQuotesStore.actions.setVideoQuoteProperty(quote.id!, 'isHtmlEnabled', !quote.isHtmlEnabled)
-    await videoQuotesStore.actions.updateVideoQuote(quote.id!)
+    quotesStore.actions.setVideoQuoteProperty(quote.id!, 'isHtmlEnabled', !quote.isHtmlEnabled)
+    await quotesStore.actions.updateVideoQuote(quote.id!)
   },
 
   handleInputFocus(quoteId: string) {
@@ -104,27 +106,26 @@ const methods = {
     if (e.key !== 'Tab') return
 
     const isCreatingNewQuote =
-      videoQuotesStore.getters.activeVideoQuoteIndex ===
-      videoQuotesStore.state.videoQuotes.length - 1
+      quotesStore.getters.activeVideoQuoteIndex === quotesStore.state.videoQuotes.length - 1
     if (e.ctrlKey || e.altKey || e.metaKey || (!e.shiftKey && isCreatingNewQuote)) {
       e.preventDefault()
       return
     }
 
-    const { activeVideoQuoteIndex } = videoQuotesStore.getters
+    const { activeVideoQuoteIndex } = quotesStore.getters
 
     if (activeVideoQuoteIndex === -1 || (e.shiftKey && activeVideoQuoteIndex === 0)) {
       e.preventDefault()
       return
     }
 
-    if (e.shiftKey && videoQuotesStore.state.videoQuotes[activeVideoQuoteIndex - 1]) {
-      videoQuotesStore.actions.setActiveVideoQuoteId(
-        videoQuotesStore.state.videoQuotes[activeVideoQuoteIndex - 1].id!,
+    if (e.shiftKey && quotesStore.state.videoQuotes[activeVideoQuoteIndex - 1]) {
+      quotesStore.actions.setActiveVideoQuoteId(
+        quotesStore.state.videoQuotes[activeVideoQuoteIndex - 1].id!,
       )
-    } else if (videoQuotesStore.state.videoQuotes[activeVideoQuoteIndex + 1]) {
-      videoQuotesStore.actions.setActiveVideoQuoteId(
-        videoQuotesStore.state.videoQuotes[activeVideoQuoteIndex + 1].id!,
+    } else if (quotesStore.state.videoQuotes[activeVideoQuoteIndex + 1]) {
+      quotesStore.actions.setActiveVideoQuoteId(
+        quotesStore.state.videoQuotes[activeVideoQuoteIndex + 1].id!,
       )
     }
   },
@@ -150,9 +151,9 @@ const methods = {
 
     const preparedParagraphs = paragraphs.map((p) => p.trim()).map(stripQuotes)
     const userId = userStore.state.user!.id
-    const activeQuote = videoQuotesStore.getters.activeVideoQuote!
-    const activeQuoteIndex = videoQuotesStore.getters.activeVideoQuoteIndex
-    const isLastQuote = activeQuoteIndex === videoQuotesStore.state.videoQuotes.length - 1
+    const activeQuote = quotesStore.getters.activeVideoQuote!
+    const activeQuoteIndex = quotesStore.getters.activeVideoQuoteIndex
+    const isLastQuote = activeQuoteIndex === quotesStore.state.videoQuotes.length - 1
 
     const newQuotes = preparedParagraphs.map((paragraph, i) => ({
       ...new VideoQuote(),
@@ -166,19 +167,12 @@ const methods = {
     if (isLastQuote) {
       targetIndex = activeQuoteIndex
     } else {
-      videoQuotesStore.actions.setVideoQuoteProperty(
-        activeQuote.id!,
-        'content',
-        preparedParagraphs[0],
-      )
+      quotesStore.actions.setVideoQuoteProperty(activeQuote.id!, 'content', preparedParagraphs[0])
 
       newQuotes.splice(0, 1)
     }
 
-    const createdQuotes = await videoQuotesStore.actions.insertVideoQuotesAtIndex(
-      newQuotes,
-      targetIndex,
-    )
+    const createdQuotes = await quotesStore.actions.insertVideoQuotesAtIndex(newQuotes, targetIndex)
 
     // Select last inserted quote
     if (!isLastQuote) {
@@ -192,38 +186,38 @@ const methods = {
   async handleInputEvent() {
     data.hasQuoteChanged = true
 
-    const activeQuoteIndex = videoQuotesStore.getters.activeVideoQuoteIndex
-    const activeQuote = videoQuotesStore.getters.activeVideoQuote
+    const activeQuoteIndex = quotesStore.getters.activeVideoQuoteIndex
+    const activeQuote = quotesStore.getters.activeVideoQuote
 
     if (
-      activeQuoteIndex === videoQuotesStore.state.videoQuotes.length - 1 &&
+      activeQuoteIndex === quotesStore.state.videoQuotes.length - 1 &&
       activeQuote?.content !== ''
     ) {
       const userId = userStore.state.user!.id
       const position = getters.maxPosition.value + 1
-      await videoQuotesStore.actions.createNewVideoQuote(userId, props.videoId, position)
+      await quotesStore.actions.createNewVideoQuote(userId, props.videoId, position)
     }
   },
 
   async handleInputBlur(quoteId: string) {
     if (data.hasQuoteChanged) {
       data.hasQuoteChanged = false
-      await videoQuotesStore.actions.updateVideoQuote(quoteId)
+      await quotesStore.actions.updateVideoQuote(quoteId)
     }
   },
 
   async deleteQuote(quoteId: string) {
-    await videoQuotesStore.actions.deleteVideoQuote(quoteId)
-    videoQuoteAudiosStore.actions.visuallyRemoveVideoQuoteAudios(quoteId)
+    await quotesStore.actions.deleteVideoQuote(quoteId)
+    audiosStore.actions.visuallyRemoveVideoQuoteAudios(quoteId)
   },
 
   async handleSelect(key: string, index: number) {
-    const quote = videoQuotesStore.state.videoQuotes[index]
+    const quote = quotesStore.state.videoQuotes[index]
     const userId = userStore.state.user!.id
     if (key === 'createAbove') {
-      await videoQuotesStore.actions.createNewVideoAtIndex(index, userId, props.videoId)
+      await quotesStore.actions.createNewVideoAtIndex(index, userId, props.videoId)
     } else if (key === 'createBelow') {
-      await videoQuotesStore.actions.createNewVideoAtIndex(index + 1, userId, props.videoId)
+      await quotesStore.actions.createNewVideoAtIndex(index + 1, userId, props.videoId)
     } else if (key === 'delete') {
       await methods.deleteQuote(quote.id!)
     }
@@ -236,17 +230,17 @@ const methods = {
     class="quote-row"
     :data-id="quote.id"
     :class="{
-      active: quote.id === videoQuotesStore.state.activeVideoQuoteId,
+      active: quote.id === quotesStore.state.activeVideoQuoteId,
       dragging: props.dragging,
-      'quote-new': index === videoQuotesStore.state.videoQuotes.length - 1,
+      'quote-new': index === quotesStore.state.videoQuotes.length - 1,
       invalid: getters.getInvalidReason.value(quote),
     }"
   >
     <div class="text-content-wrapper" @click="emit('select', quote.id!, false)">
       <n-input
         v-if="
-          quote.id === videoQuotesStore.state.activeVideoQuoteId ||
-          index === videoQuotesStore.state.videoQuotes.length - 1
+          quote.id === quotesStore.state.activeVideoQuoteId ||
+          index === quotesStore.state.videoQuotes.length - 1
         "
         ref="nInputRefs"
         :value="quote.content"
@@ -259,13 +253,13 @@ const methods = {
         @paste="methods.handleInputPaste"
         @input="methods.handleInputEvent"
         @blur="methods.handleInputBlur(quote.id!)"
-        @update:value="videoQuotesStore.actions.setVideoQuoteProperty(quote.id!, 'content', $event)"
+        @update:value="quotesStore.actions.setVideoQuoteProperty(quote.id!, 'content', $event)"
       />
       <div v-else class="text-content">
         {{ quote.content || '&nbsp;' }}
       </div>
 
-      <template v-if="index !== videoQuotesStore.state.videoQuotes.length - 1">
+      <template v-if="index !== quotesStore.state.videoQuotes.length - 1">
         <n-tooltip v-if="getters.getInvalidReason.value(quote)" trigger="hover" placement="bottom">
           <template #trigger>
             <div class="info-icon-wrapper" @click.stop>
@@ -276,7 +270,7 @@ const methods = {
         </n-tooltip>
 
         <n-tag
-          v-if="quote.selectedAudioId"
+          v-if="getters.quoteVoiceDetails.value(quote)"
           class="voice-details"
           type="default"
           size="small"
@@ -310,7 +304,7 @@ const methods = {
         </n-dropdown>
 
         <div
-          v-if="videoQuotesStore.state.videoQuotes.length > 1"
+          v-if="quotesStore.state.videoQuotes.length > 1"
           ref="dragHandleRefs"
           class="drag-handle"
           @mousedown="emit('drag-handle-mousedown', $event)"
