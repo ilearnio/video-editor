@@ -69,6 +69,11 @@ export const useVideoQuotesStore = defineStore('videoQuotesStore', () => {
       const response = await getVideoQuotes(userId, videoId)
       actions.setVideoQuotes(response.items)
     },
+    async createNewVideoAtIndex(targetIndex: number, userId: string, videoId: string) {
+      const data = { ...new VideoQuote(), userId, videoId, position: targetIndex }
+      const createdQuote = await createVideoQuote(videoToCreateVideoQuoteDTO(data))
+      state.videoQuotes.splice(targetIndex, 0, createdQuote)
+    },
     async createNewVideoQuote(userId: string, videoId: string, position: number) {
       const data = { ...new VideoQuote(), userId, videoId, position }
       const createdQuote = await createVideoQuote(videoToCreateVideoQuoteDTO(data))

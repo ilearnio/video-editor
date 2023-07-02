@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { NInput } from 'naive-ui'
+import type { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 import { nextTick, onBeforeMount, reactive, ref } from 'vue'
 import { computed } from 'vue'
 
@@ -7,7 +8,11 @@ import {
   InformationCircleOutline as InfoIcon,
   RemoveCircleOutline as RemoveIcon,
 } from '@vicons/ionicons5'
-import { DragIndicatorSharp as DragIcon } from '@vicons/material'
+import {
+  ExpandLessOutlined as CollapseIcon,
+  DragIndicatorSharp as DragIcon,
+  ExpandMoreOutlined as ExpandIcon,
+} from '@vicons/material'
 
 import { upperFirst } from '@/helpers/strings'
 import { VideoQuote } from '@/models/videoQuotes'
@@ -30,6 +35,21 @@ const nInputRefs = ref<(typeof NInput)[]>()
 let isDragging = false
 let draggingInitialQuotePositions: Record<string, number> = {}
 
+const dropdownOptions: DropdownMixedOption[] = [
+  {
+    label: 'Create a quote above',
+    key: 'createAbove',
+  },
+  {
+    label: 'Create a quote below',
+    key: 'createBelow',
+  },
+  {
+    label: 'Delete',
+    key: 'delete',
+  },
+]
+
 const props = defineProps<{
   videoId: string
 }>()
@@ -37,6 +57,7 @@ const props = defineProps<{
 const data = reactive({
   hasQuoteChanged: false,
   draggingIndex: -1,
+  dropdownVisible: {} as Record<string, boolean>,
 })
 
 const getters = {
@@ -207,6 +228,18 @@ const methods = {
     videoQuoteAudiosStore.actions.visuallyRemoveVideoQuoteAudios(quoteId)
   },
 
+  async handleSelect(key: string, index: number) {
+    const quote = videoQuotesStore.state.videoQuotes[index]
+    const userId = userStore.state.user!.id
+    if (key === 'createAbove') {
+      await videoQuotesStore.actions.createNewVideoAtIndex(index, userId, props.videoId)
+    } else if (key === 'createBelow') {
+      await videoQuotesStore.actions.createNewVideoAtIndex(index + 1, userId, props.videoId)
+    } else if (key === 'delete') {
+      await videoQuotesStore.actions.removeVideoQuote(quote.id!)
+    }
+  },
+
   dragStart(index: number, event: MouseEvent) {
     const dragHandle = event.target as HTMLElement
     if (!dragHandle.classList.contains('drag-handle') && !dragHandle.closest('.drag-handle')) return
@@ -363,18 +396,19 @@ onBeforeMount(async () => {
               HTML
             </n-button>
 
-            <n-popconfirm
-              :negative-text="null"
-              placement="bottom"
-              @positive-click="methods.removeQuote(quote.id!)"
+            <n-dropdown
+              :options="dropdownOptions"
+              placement="bottom-end"
+              trigger="click"
+              :animated="false"
+              v-model:show="data.dropdownVisible[index]"
+              @select="(key) => methods.handleSelect(key, index)"
             >
-              <template #trigger>
-                <a class="remove-link" @click.stop>
-                  <RemoveIcon />
-                </a>
-              </template>
-              Delete the quote including it's audio files?
-            </n-popconfirm>
+              <n-icon @click.stop size="16" class="dropdown-icon">
+                <CollapseIcon v-if="data.dropdownVisible[index]" />
+                <ExpandIcon v-else />
+              </n-icon>
+            </n-dropdown>
 
             <div
               v-if="videoQuotesStore.state.videoQuotes.length > 1"
@@ -487,6 +521,10 @@ onBeforeMount(async () => {
   box-shadow: 0 0 0 0.5px #48975b;
 }
 
+.dropdown-icon {
+  margin: 0 0 0 5px;
+}
+
 .voice-details {
   margin: 0 -5px 0 12px;
   opacity: 0.9;
@@ -505,26 +543,6 @@ onBeforeMount(async () => {
 
 .toggle-html-button {
   margin-left: 12px;
-}
-
-.remove-link {
-  color: #999;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  margin-left: 5px;
-
-  &:hover {
-    color: #333;
-  }
-
-  svg {
-    width: 16px;
-  }
 }
 
 .quote-audios-area {
