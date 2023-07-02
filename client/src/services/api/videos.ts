@@ -34,6 +34,6 @@ export const updateVideo = async (id: string, data: UpdateVideoDTO): Promise<Vid
   return record
 }
 
-export const removeVideo = async (id: string) => {
+export const deleteVideo = async (id: string) => {
   return await collection.delete(id)
 }

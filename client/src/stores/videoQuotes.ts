@@ -5,8 +5,8 @@ import { videoToCreateVideoQuoteDTO } from '@/model-functions/videoQuotes'
 import { VideoQuote } from '@/models/videoQuotes'
 import {
   createVideoQuote,
+  deleteVideoQuote,
   getVideoQuotes,
-  removeVideoQuote,
   updateVideoQuote,
   updateVideoQuotes,
 } from '@/services/api/videoQuotes'
@@ -113,18 +113,6 @@ export const useVideoQuotesStore = defineStore('videoQuotesStore', () => {
       })
       return updated
     },
-    async removeVideoQuote(id: string) {
-      if (state.activeVideoQuoteId === id) actions.setActiveVideoQuoteId('')
-
-      const index = state.videoQuotes.findIndex((q) => q.id === id)
-      if (index === -1) throw new Error(`Video quote ${id} not found`)
-
-      state.videoQuotes.splice(index, 1)
-
-      actions.recalcPositions()
-      await removeVideoQuote(id)
-      await actions.updateVideoQuotes()
-    },
     async insertVideoQuotesAtIndex(quotes: VideoQuote[], index: number): Promise<VideoQuote[]> {
       const initialPosition = state.videoQuotes[index - 1]
         ? state.videoQuotes[index - 1].position + 1
@@ -136,6 +124,7 @@ export const useVideoQuotesStore = defineStore('videoQuotesStore', () => {
       const results = await Promise.allSettled(promises)
       const rejected = results.filter(isRejected)
       if (rejected.length) {
+        rejected.forEach((r) => console.error(r.reason))
         console.error('Failed to create some of the video quotes')
       }
 
@@ -147,6 +136,41 @@ export const useVideoQuotesStore = defineStore('videoQuotesStore', () => {
       }
 
       return createdQuotes
+    },
+    async deleteVideoQuote(id: string) {
+      if (state.activeVideoQuoteId === id) actions.setActiveVideoQuoteId('')
+
+      const index = state.videoQuotes.findIndex((q) => q.id === id)
+      if (index === -1) throw new Error(`Video quote ${id} not found`)
+
+      state.videoQuotes.splice(index, 1)
+
+      actions.recalcPositions()
+      await deleteVideoQuote(id)
+      await actions.updateVideoQuotes()
+    },
+    async deleteAllVideoQuotes(userId: string, videoId: string) {
+      const quotes = state.videoQuotes.filter((q) => q.videoId === videoId)
+      if (quotes[quotes.length - 1].content === '') {
+        quotes.pop()
+      }
+
+      const promises = quotes.map(async (quote) => {
+        await deleteVideoQuote(quote.id!)
+        const index = state.videoQuotes.findIndex((q) => q.id === quote.id!)
+        state.videoQuotes.splice(index, 1)
+      })
+      const results = await Promise.allSettled(promises)
+      const rejected = results.filter(isRejected)
+      if (rejected.length) {
+        rejected.forEach((r) => console.error(r.reason))
+        throw new Error('Failed to delete some of the video quotes')
+      }
+
+      const quotesLeft = state.videoQuotes.filter((q) => q.videoId === videoId)
+      if (quotesLeft.length === 0) {
+        await actions.createNewVideoQuote(userId, videoId, 0)
+      }
     },
   }
 

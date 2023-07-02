@@ -57,6 +57,6 @@ export const selectVideoQuoteAudioId = async (
   await updateVideoQuote(videoQuoteId, { selectedAudioId: videoQuoteAudioId })
 }
 
-export const removeVideoQuote = async (id: string): Promise<void> => {
+export const deleteVideoQuote = async (id: string): Promise<void> => {
   await collection.delete(id)
 }

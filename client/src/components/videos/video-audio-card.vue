@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { RemoveCircleOutline as RemoveIcon } from '@vicons/ionicons5'
+import { RemoveCircleOutline as DeleteIcon } from '@vicons/ionicons5'
 
 import { getFileUrl } from '@/services/pocketbase'
 
@@ -14,7 +14,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (name: 'remove'): void
+  (name: 'delete'): void
 }>()
 
 const getters = {
@@ -41,8 +41,8 @@ const getters = {
     :duration="props.duration"
   >
     <template #right>
-      <a class="remove-link" title="Remove" @click="emit('remove')">
-        <remove-icon class="remove-icon" />
+      <a class="delete-link" title="Remove" @click="emit('delete')">
+        <delete-icon class="delete-icon" />
       </a>
     </template>
   </audio-player>
@@ -53,18 +53,18 @@ const getters = {
   width: 100%;
 }
 
-.remove-link {
+.delete-link {
   cursor: pointer;
   display: block;
   padding: 2px;
   margin-left: 5px;
 
-  &:hover .remove-icon {
+  &:hover .delete-icon {
     color: #111;
   }
 }
 
-.remove-icon {
+.delete-icon {
   width: 20px;
   display: block;
   margin-top: -1px;

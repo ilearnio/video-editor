@@ -6,7 +6,7 @@ import { videoToCreateVideoQuoteAudioDTO } from '@/model-functions/videoQuoteAud
 import { VideoQuoteAudio } from '@/models/videoQuoteAudios'
 import {
   createVideoQuoteAudio,
-  removeVideoQuoteAudio,
+  deleteVideoQuoteAudio,
   textToSpeech,
 } from '@/services/api/videoQuoteAudios'
 import { selectVideoQuoteAudioId } from '@/services/api/videoQuotes'
@@ -64,14 +64,14 @@ export const useVideoQuoteAudiosStore = defineStore('videoQuoteAudiosStore', () 
       }
       state.videoQuoteAudios[index][property] = value
     },
-    async removeVideoQuoteAudio(audioId: string) {
+    async deleteVideoQuoteAudio(audioId: string) {
       state.videoQuoteAudios = state.videoQuoteAudios.filter((a) => a.id !== audioId)
       // if (state.selectedAudioId === audioId) {
       //   if (state.videoQuoteAudios.length) {
       //     actions.selectAudioId(state.videoQuoteAudios[0].id!)
       //   }
       // }
-      await removeVideoQuoteAudio(audioId)
+      await deleteVideoQuoteAudio(audioId)
     },
     async visuallyRemoveVideoQuoteAudios(videoQuoteId: string) {
       state.videoQuoteAudios = state.videoQuoteAudios.filter((a) => a.videoQuoteId !== videoQuoteId)

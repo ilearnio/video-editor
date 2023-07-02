@@ -51,8 +51,8 @@ const methods = {
     await videoQuoteAudiosStore.actions.selectAudioId(audioId)
     videoQuotesStore.actions.setVideoQuoteProperty(quoteId, 'selectedAudioId', audioId)
   },
-  async removeAudio(audio: VideoQuoteAudio) {
-    await videoQuoteAudiosStore.actions.removeVideoQuoteAudio(audio.id!)
+  async deleteAudio(audio: VideoQuoteAudio) {
+    await videoQuoteAudiosStore.actions.deleteVideoQuoteAudio(audio.id!)
   },
   async handleAudioGeneratorSubmit(voice: string, speed: number, seed: number) {
     data.generatorPopoverVisibility = false
@@ -134,8 +134,8 @@ onBeforeMount(async () => {
               :audio="audio"
               :checked="audio.id === videoQuotesStore.getters.activeVideoQuote.selectedAudioId"
               :invalid-reason="methods.getInvalidReason(audio)"
-              @remove="methods.removeAudio(audio)"
               @checked="methods.handleChange(audio.id!)"
+              @delete="methods.deleteAudio(audio)"
             />
           </div>
         </template>

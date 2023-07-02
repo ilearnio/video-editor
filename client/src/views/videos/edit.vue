@@ -210,7 +210,7 @@ onBeforeMount(async () => {
             :video-id="videoStore.state.video.id!"
             :file="formValueRef.backgroundAudioFile"
             :duration="formValueRef.backgroundAudioDuration / 1000"
-            @remove="formValueRef.backgroundAudioFile = ''"
+            @delete="formValueRef.backgroundAudioFile = ''"
           />
         </n-form-item>
         <n-modal v-model:show="data.showImagePreview" preset="card" style="width: 600px">

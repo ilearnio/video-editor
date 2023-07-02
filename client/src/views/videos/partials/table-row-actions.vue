@@ -24,7 +24,7 @@ const methods = {
   },
 
   async deleteVideo() {
-    await videosStore.actions.removeVideo(props.video.id!)
+    await videosStore.actions.deleteVideo(props.video.id!)
     emit('delete', props.video.id!)
   },
 }

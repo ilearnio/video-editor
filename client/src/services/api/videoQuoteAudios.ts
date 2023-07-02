@@ -60,6 +60,6 @@ export const textToSpeech = async (req: TextToSpeechRequest): Promise<VideoQuote
   return res.data
 }
 
-export const removeVideoQuoteAudio = async (id: string): Promise<void> => {
+export const deleteVideoQuoteAudio = async (id: string): Promise<void> => {
   await collection.delete(id)
 }

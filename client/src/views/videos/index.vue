@@ -170,7 +170,7 @@ const methods = {
   }, 400),
   handleSelectCheckedRowsAction(optionValue: string) {
     if (optionValue === 'delete') {
-      videosStore.actions.removeItems(data.checkedRowKeys)
+      videosStore.actions.deleteItems(data.checkedRowKeys)
     }
   },
   handleCheck(keys: string[]) {

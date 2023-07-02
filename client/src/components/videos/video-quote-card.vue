@@ -212,8 +212,8 @@ const methods = {
     }
   },
 
-  async removeQuote(quoteId: string) {
-    await videoQuotesStore.actions.removeVideoQuote(quoteId)
+  async deleteQuote(quoteId: string) {
+    await videoQuotesStore.actions.deleteVideoQuote(quoteId)
     videoQuoteAudiosStore.actions.visuallyRemoveVideoQuoteAudios(quoteId)
   },
 
@@ -225,7 +225,7 @@ const methods = {
     } else if (key === 'createBelow') {
       await videoQuotesStore.actions.createNewVideoAtIndex(index + 1, userId, props.videoId)
     } else if (key === 'delete') {
-      await methods.removeQuote(quote.id!)
+      await methods.deleteQuote(quote.id!)
     }
   },
 }

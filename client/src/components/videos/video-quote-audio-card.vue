@@ -2,8 +2,8 @@
 import { computed } from 'vue'
 
 import {
+  RemoveCircleOutline as DeleteIcon,
   InformationCircleOutline as InfoIcon,
-  RemoveCircleOutline as RemoveIcon,
 } from '@vicons/ionicons5'
 
 import type { VideoQuoteAudio } from '@/models/videoQuoteAudios'
@@ -19,7 +19,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (name: 'remove'): void
+  (name: 'delete'): void
   (name: 'checked', event: InputEvent): void
 }>()
 
@@ -63,8 +63,8 @@ const getters = {
         </template>
         {{ invalidReason }}
       </n-tooltip>
-      <a class="remove-link" title="Remove" @click="emit('remove')">
-        <remove-icon class="remove-icon" />
+      <a class="delete-link" title="Remove" @click="emit('delete')">
+        <delete-icon class="delete-icon" />
       </a>
     </template>
   </audio-player>
@@ -83,13 +83,13 @@ const getters = {
   margin: 0 8px 0 3px;
 }
 
-.remove-link {
+.delete-link {
   cursor: pointer;
   display: block;
   padding: 2px;
   margin-left: 5px;
 
-  &:hover .remove-icon {
+  &:hover .delete-icon {
     color: #111;
   }
 }
@@ -106,7 +106,7 @@ const getters = {
   display: block;
 }
 
-.remove-icon {
+.delete-icon {
   width: 20px;
   display: block;
   margin-top: -1px;

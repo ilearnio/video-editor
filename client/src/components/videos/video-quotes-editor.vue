@@ -2,8 +2,7 @@
 import { NInput } from 'naive-ui'
 import { nextTick, onBeforeMount, reactive, ref } from 'vue'
 
-import { ContentCopyFilled as IconCopy } from '@vicons/material'
-
+import { stripTags } from '@/helpers/html'
 import { VideoQuote } from '@/models/videoQuotes'
 import { useUserStore } from '@/stores/user'
 import { useVideoQuoteAudiosStore } from '@/stores/videoQuoteAudios'
@@ -40,6 +39,32 @@ const methods = {
       await nextTick()
       nInputRefs.value?.find((component) => component.$attrs['data-id'] === quoteId)?.focus()
     }
+  },
+
+  async createInitialQuote() {
+    await videoQuotesStore.actions.createNewVideoQuote(userStore.state.user!.id, props.videoId, 0)
+  },
+
+  copyQuotes() {
+    const quotes = videoQuotesStore.state.videoQuotes
+    const text = quotes
+      .map((quote) => stripTags(quote.content).trim())
+      .join('\n\n')
+      .trim()
+    navigator.clipboard.writeText(text)
+  },
+
+  copyQuotesHTML() {
+    const quotes = videoQuotesStore.state.videoQuotes
+    const text = quotes
+      .map((quote) => quote.content.trim())
+      .join('\n\n')
+      .trim()
+    navigator.clipboard.writeText(text)
+  },
+
+  async deleteAllQuotes() {
+    await videoQuotesStore.actions.deleteAllVideoQuotes(userStore.state.user!.id, props.videoId)
   },
 
   dragStart(index: number, event: MouseEvent) {
@@ -127,19 +152,56 @@ onBeforeMount(async () => {
 </script>
 
 <template>
-  <n-h3>Quotes ({{ videoQuotesStore.state.videoQuotes.length - 1 }})</n-h3>
+  <n-space justify="space-between">
+    <n-h3>
+      Quotes
+      <template v-if="videoQuotesStore.state.videoQuotes.length > 1">
+        ({{ videoQuotesStore.state.videoQuotes.length - 1 }})
+      </template>
+    </n-h3>
+    <div v-if="videoQuotesStore.state.videoQuotes.length > 0">
+      <n-space>
+        <n-button size="small" @click="methods.copyQuotes">Copy quotes as text</n-button>
+        <n-button size="small" @click="methods.copyQuotesHTML">Copy quotes as HTML</n-button>
+        <n-popconfirm placement="bottom-end" @positive-click="methods.deleteAllQuotes">
+          <template #activator>
+            <n-button
+              size="small"
+              title="Copy all quotes as plain text"
+              @click="methods.copyQuotes"
+            >
+              Delete all quotes
+            </n-button>
+          </template>
+          Delete all video quotes for this video? All the related audio files will be deleted as
+          well.
+        </n-popconfirm>
+      </n-space>
+    </div>
+  </n-space>
+
   <div ref="containerRef" class="container">
     <div class="column-left">
-      <video-quote-card
-        v-for="(quote, index) in videoQuotesStore.state.videoQuotes"
-        :key="quote.id"
-        :quote="quote"
-        :index="index"
-        :video-id="props.videoId"
-        :dragging="index === data.draggingIndex"
-        @select="(quoteId, focus) => methods.selectRow(quoteId, focus)"
-        @drag-handle-mousedown="methods.dragStart(index, $event)"
-      />
+      <template v-if="videoQuotesStore.state.videoQuotes.length === 0">
+        <n-empty>
+          <n-space vertical align="center">
+            <span>No quotes yet. Click the button below to add a quote.</span>
+            <n-button @click="methods.createInitialQuote">Add quote</n-button>
+          </n-space>
+        </n-empty>
+      </template>
+      <template v-else>
+        <video-quote-card
+          v-for="(quote, index) in videoQuotesStore.state.videoQuotes"
+          :key="quote.id"
+          :quote="quote"
+          :index="index"
+          :video-id="props.videoId"
+          :dragging="index === data.draggingIndex"
+          @select="(quoteId, focus) => methods.selectRow(quoteId, focus)"
+          @drag-handle-mousedown="methods.dragStart(index, $event)"
+        />
+      </template>
     </div>
     <div class="column-right">
       <div class="quote-audios-area">

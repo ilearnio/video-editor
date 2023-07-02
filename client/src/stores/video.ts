@@ -4,7 +4,7 @@ import { reactive } from 'vue'
 
 import { videoToCreateVideoDTO, videoToUpdateVideoDTO } from '@/model-functions/videos'
 import { Video } from '@/models/videos'
-import { createVideo, getVideoList, removeVideo, updateVideo } from '@/services/api/videos'
+import { createVideo, deleteVideo, getVideoList, updateVideo } from '@/services/api/videos'
 
 let lastQueryParams: RecordListQueryParams | undefined
 
@@ -34,8 +34,8 @@ export const useVideoStore = defineStore('videoStore', () => {
       lastQueryParams = queryParams
       state.list = await getVideoList(queryParams)
     },
-    async removeItems(ids: string[]) {
-      const promises = ids.map((id) => removeVideo(id))
+    async deleteItems(ids: string[]) {
+      const promises = ids.map((id) => deleteVideo(id))
       await Promise.all(promises)
       await actions.fetchItems(lastQueryParams)
     },
@@ -48,8 +48,8 @@ export const useVideoStore = defineStore('videoStore', () => {
       }
       state.video[property] = value
     },
-    async removeVideo(id: string) {
-      await removeVideo(id)
+    async deleteVideo(id: string) {
+      await deleteVideo(id)
     },
     async createVideo() {
       if (state.video.id) throw new Error('Video is already created')
