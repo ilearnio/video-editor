@@ -24,7 +24,9 @@ export const getVideoQuote = async (id: string): Promise<VideoQuote> => {
 }
 
 export const createVideoQuote = async (data: CreateVideoQuoteDTO): Promise<VideoQuote> => {
-  const record = await collection.create<VideoQuote>(objectToFormData(data))
+  const record = await collection.create<VideoQuote>(objectToFormData(data), {
+    $autoCancel: false,
+  })
   return record
 }
 
@@ -32,7 +34,9 @@ export const updateVideoQuote = async (
   id: string,
   data: Partial<UpdateVideoQuoteDTO>,
 ): Promise<VideoQuote> => {
-  const record = await collection.update<VideoQuote>(id, objectToFormData(data))
+  const record = await collection.update<VideoQuote>(id, objectToFormData(data), {
+    $autoCancel: false,
+  })
   return record
 }
 

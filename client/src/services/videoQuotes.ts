@@ -80,3 +80,8 @@ export const getInvalidReason = (
     return InvalidVideoQuoteAudioReason.SpeedMismatch
   }
 }
+
+export const stripQuotes = (text: string): string => {
+  const matches = text.match(/^['"“”](.*?)['"“”]/)
+  return matches ? matches[1] : text
+}

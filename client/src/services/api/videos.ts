@@ -21,12 +21,16 @@ export const getVideo = async (id: string): Promise<Video> => {
 }
 
 export const createVideo = async (data: CreateVideoDTO): Promise<Video> => {
-  const record = await collection.create<Video>(objectToFormData(data))
+  const record = await collection.create<Video>(objectToFormData(data), {
+    $autoCancel: false,
+  })
   return record
 }
 
 export const updateVideo = async (id: string, data: UpdateVideoDTO): Promise<Video> => {
-  const record = await collection.update<Video>(id, objectToFormData(data))
+  const record = await collection.update<Video>(id, objectToFormData(data), {
+    $autoCancel: false,
+  })
   return record
 }
 

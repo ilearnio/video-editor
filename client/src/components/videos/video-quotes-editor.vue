@@ -12,6 +12,7 @@ import { DragIndicatorSharp as DragIcon } from '@vicons/material'
 import { upperFirst } from '@/helpers/strings'
 import { VideoQuote } from '@/models/videoQuotes'
 import { getInvalidReason } from '@/services/videoQuotes'
+import { stripQuotes } from '@/services/videoQuotes'
 import { useUserStore } from '@/stores/user'
 import { useVideoQuoteAudiosStore } from '@/stores/videoQuoteAudios'
 import { useVideoQuotesStore } from '@/stores/videoQuotes'
@@ -115,6 +116,66 @@ const methods = {
       videoQuotesStore.actions.setActiveVideoQuoteId(
         videoQuotesStore.state.videoQuotes[activeVideoQuoteIndex + 1].id!,
       )
+    }
+  },
+
+  // when pasting, check if the clipboard contains text that is multiple paragraphs long, if so,
+  // split it into multiple quotes, otherwise paste it into the current quote
+  async handleInputPaste(e: ClipboardEvent) {
+    const textarea = e.target as HTMLTextAreaElement
+    const selectedText = window.getSelection()?.toString()
+
+    if (textarea.value.length > 0 && selectedText !== textarea.value) return
+
+    const clipboardData = e.clipboardData
+    if (!clipboardData) return
+
+    const pastedText = clipboardData.getData('text')
+    if (!pastedText) return
+
+    const paragraphs = pastedText.split('\n').filter((p) => p.trim().length > 0)
+    if (paragraphs.length === 1) return
+
+    e.preventDefault()
+
+    const preparedParagraphs = paragraphs.map((p) => p.trim()).map(stripQuotes)
+    const userId = userStore.state.user!.id
+    const activeQuote = videoQuotesStore.getters.activeVideoQuote!
+    const activeQuoteIndex = videoQuotesStore.getters.activeVideoQuoteIndex
+    const isLastQuote = activeQuoteIndex === videoQuotesStore.state.videoQuotes.length - 1
+
+    const newQuotes = preparedParagraphs.map((paragraph, i) => ({
+      ...new VideoQuote(),
+      videoId: props.videoId,
+      userId,
+      content: paragraph,
+      position: activeQuote.position + i + 1,
+    }))
+    let targetIndex = activeQuoteIndex + 1
+
+    if (isLastQuote) {
+      targetIndex = activeQuoteIndex
+    } else {
+      videoQuotesStore.actions.setVideoQuoteProperty(
+        activeQuote.id!,
+        'content',
+        preparedParagraphs[0],
+      )
+
+      newQuotes.splice(0, 1)
+    }
+
+    const createdQuotes = await videoQuotesStore.actions.insertVideoQuotesAtIndex(
+      newQuotes,
+      targetIndex,
+    )
+
+    // Select last inserted quote
+    if (!isLastQuote) {
+      const lastCreatedQuote = createdQuotes[createdQuotes.length - 1]
+      if (lastCreatedQuote) {
+        await methods.selectRow(lastCreatedQuote.id!, true)
+      }
     }
   },
 
@@ -260,6 +321,7 @@ onBeforeMount(async () => {
             :autosize="{ minRows: 1, maxRows: 3 }"
             @focus="methods.handleInputFocus(quote.id!)"
             @keydown="methods.handleInputKeydown"
+            @paste="methods.handleInputPaste"
             @input="methods.handleInputEvent"
             @blur="methods.handleInputBlur(quote.id!)"
           />

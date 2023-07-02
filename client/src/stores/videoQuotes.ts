@@ -10,6 +10,7 @@ import {
   updateVideoQuote,
   updateVideoQuotes,
 } from '@/services/api/videoQuotes'
+import { isFulfilled, isRejected } from '@/types/general'
 
 export interface State {
   activeVideoQuoteId: string
@@ -70,8 +71,8 @@ export const useVideoQuotesStore = defineStore('videoQuotesStore', () => {
     },
     async createNewVideoQuote(userId: string, videoId: string, position: number) {
       const data = { ...new VideoQuote(), userId, videoId, position }
-      const createdVideo = await createVideoQuote(videoToCreateVideoQuoteDTO(data))
-      state.videoQuotes.push(createdVideo)
+      const createdQuote = await createVideoQuote(videoToCreateVideoQuoteDTO(data))
+      state.videoQuotes.push(createdQuote)
     },
     async updateVideoQuote(id: string) {
       const quoteIndex = state.videoQuotes.findIndex((q) => q.id === id)
@@ -118,6 +119,29 @@ export const useVideoQuotesStore = defineStore('videoQuotesStore', () => {
       actions.recalcPositions()
       await removeVideoQuote(id)
       await actions.updateVideoQuotes()
+    },
+    async insertVideoQuotesAtIndex(quotes: VideoQuote[], index: number): Promise<VideoQuote[]> {
+      const initialPosition = state.videoQuotes[index - 1]
+        ? state.videoQuotes[index - 1].position + 1
+        : 0
+      quotes = quotes.map((q, i) => ({ ...q, position: initialPosition + i }))
+
+      const promises = quotes.map((q) => createVideoQuote(videoToCreateVideoQuoteDTO(q)))
+
+      const results = await Promise.allSettled(promises)
+      const rejected = results.filter(isRejected)
+      if (rejected.length) {
+        console.error('Failed to create some of the video quotes')
+      }
+
+      const createdQuotes = results.filter(isFulfilled).map((r) => r.value)
+      if (createdQuotes.length > 0) {
+        state.videoQuotes.splice(index, 0, ...createdQuotes)
+        actions.recalcPositions()
+        await actions.updateVideoQuotes()
+      }
+
+      return createdQuotes
     },
   }
 
