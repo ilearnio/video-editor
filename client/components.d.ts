@@ -21,6 +21,7 @@ declare module 'vue' {
     VideoQuoteAudio: typeof import('./src/components/videos/video-quote-audio.vue')['default']
     VideoQuoteAudioCard: typeof import('./src/components/videos/video-quote-audio-card.vue')['default']
     VideoQuoteAudios: typeof import('./src/components/videos/video-quote-audios.vue')['default']
+    VideoQuoteCard: typeof import('./src/components/videos/video-quote-card.vue')['default']
     VideoQuotesEditor: typeof import('./src/components/videos/video-quotes-editor.vue')['default']
   }
 }
