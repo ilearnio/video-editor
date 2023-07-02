@@ -64,21 +64,21 @@ export const useVideoQuoteAudiosStore = defineStore('videoQuoteAudiosStore', () 
       }
       state.videoQuoteAudios[index][property] = value
     },
-    async deleteVideoQuoteAudio(audioId: string) {
+    async deleteVideoQuoteAudio(audioId: string, isSelected: boolean) {
+      const audios = state.videoQuoteAudios.filter(
+        (a) => a.videoQuoteId === state.activeVideoQuoteId,
+      )
       state.videoQuoteAudios = state.videoQuoteAudios.filter((a) => a.id !== audioId)
-      // if (state.selectedAudioId === audioId) {
-      //   if (state.videoQuoteAudios.length) {
-      //     actions.selectAudioId(state.videoQuoteAudios[0].id!)
-      //   }
-      // }
+      let newSelectedAudio: VideoQuoteAudio | undefined
+      if (isSelected && audios.length) {
+        actions.selectAudioId(audios[0].id!)
+        newSelectedAudio = audios[0]
+      }
       await deleteVideoQuoteAudio(audioId)
+      return newSelectedAudio
     },
     async visuallyRemoveVideoQuoteAudios(videoQuoteId: string) {
       state.videoQuoteAudios = state.videoQuoteAudios.filter((a) => a.videoQuoteId !== videoQuoteId)
-      // const ids = state.videoQuoteAudios.map((a) => a.id)
-      // if (ids.includes(state.selectedAudioId)) {
-      //   actions.setSelectedAudioId('')
-      // }
     },
     async createVideoQuoteAudio(audio: VideoQuoteAudio) {
       if (audio.id) throw new Error('Audio is already created')

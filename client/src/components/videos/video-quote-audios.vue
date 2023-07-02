@@ -14,8 +14,8 @@ import { useVideoQuotesStore } from '@/stores/videoQuotes'
 
 import VideoQuoteAudioCard from './video-quote-audio-card.vue'
 
-const videoQuotesStore = useVideoQuotesStore()
-const videoQuoteAudiosStore = useVideoQuoteAudiosStore()
+const quotesStore = useVideoQuotesStore()
+const audiosStore = useVideoQuoteAudiosStore()
 
 const props = defineProps<{
   videoId: string
@@ -28,7 +28,7 @@ const data = reactive({
 
 const getters = {
   isLoading: computed(() => {
-    return data.loadingIds.includes(videoQuotesStore.state.activeVideoQuoteId)
+    return data.loadingIds.includes(quotesStore.state.activeVideoQuoteId)
   }),
 }
 
@@ -41,18 +41,23 @@ const methods = {
   getInvalidReason(audio: VideoQuoteAudio) {
     if (!audio) return
     return getInvalidReason(
-      videoQuotesStore.state.videoQuotes,
-      videoQuoteAudiosStore.state.videoQuoteAudios,
+      quotesStore.state.videoQuotes,
+      audiosStore.state.videoQuoteAudios,
       audio,
     )
   },
   async handleChange(audioId: string) {
-    const quoteId = videoQuotesStore.state.activeVideoQuoteId
-    await videoQuoteAudiosStore.actions.selectAudioId(audioId)
-    videoQuotesStore.actions.setVideoQuoteProperty(quoteId, 'selectedAudioId', audioId)
+    const quoteId = quotesStore.state.activeVideoQuoteId
+    await audiosStore.actions.selectAudioId(audioId)
+    quotesStore.actions.setVideoQuoteProperty(quoteId, 'selectedAudioId', audioId)
   },
   async deleteAudio(audio: VideoQuoteAudio) {
-    await videoQuoteAudiosStore.actions.deleteVideoQuoteAudio(audio.id!)
+    const quote = quotesStore.getters.activeVideoQuote!
+    const isSelected = quote.selectedAudioId === audio.id!
+    const selectedAudio = await audiosStore.actions.deleteVideoQuoteAudio(audio.id!, isSelected)
+    if (selectedAudio) {
+      quotesStore.actions.setVideoQuoteProperty(quote.id!, 'selectedAudioId', selectedAudio?.id)
+    }
   },
   async handleAudioGeneratorSubmit(voice: string, speed: number, seed: number) {
     data.generatorPopoverVisibility = false
@@ -61,27 +66,27 @@ const methods = {
   async generateAudio(voice: string, speed: number, seed: number) {
     await nextTick()
 
-    const { activeVideoQuoteId } = videoQuotesStore.state
+    const { activeVideoQuoteId } = quotesStore.state
     if (!activeVideoQuoteId) {
       throw new Error('Video quote id is required')
     }
 
-    if (!videoQuotesStore.getters.activeVideoQuote?.content) {
+    if (!quotesStore.getters.activeVideoQuote?.content) {
       throw new Error('Video quote content is required')
     }
 
     data.loadingIds.push(activeVideoQuoteId)
 
-    const quote = videoQuotesStore.getters.activeVideoQuote
+    const quote = quotesStore.getters.activeVideoQuote
 
     try {
-      const createdVideoQuoteAudio = await videoQuoteAudiosStore.actions.generateAudio(
+      const createdVideoQuoteAudio = await audiosStore.actions.generateAudio(
         extractQuotePlainText(quote),
         voice,
         speed,
         seed,
       )
-      videoQuotesStore.actions.setVideoQuoteProperty(
+      quotesStore.actions.setVideoQuoteProperty(
         activeVideoQuoteId,
         'selectedAudioId',
         createdVideoQuoteAudio.id!,
@@ -95,21 +100,19 @@ const methods = {
 
 onBeforeMount(async () => {
   const videoQuoteAudios = await videoQuoteAudiosApi.getVideoQuoteAudios(props.videoId)
-  videoQuoteAudiosStore.actions.setVideoQuoteAudios(videoQuoteAudios)
+  audiosStore.actions.setVideoQuoteAudios(videoQuoteAudios)
 })
 </script>
 
 <template>
   <div class="quote-audios">
-    <div v-if="videoQuotesStore.state.activeVideoQuoteId" class="heading-area">
+    <div v-if="quotesStore.state.activeVideoQuoteId" class="heading-area">
       <h4>Pick your preferred sample</h4>
       <n-popover v-model:show="data.generatorPopoverVisibility" trigger="click" style="padding: 0">
         <template #trigger>
           <n-button
             class="generate-button"
-            :disabled="
-              getters.isLoading.value || !videoQuotesStore.getters.activeVideoQuote?.content
-            "
+            :disabled="getters.isLoading.value || !quotesStore.getters.activeVideoQuote?.content"
             type="success"
             size="small"
           >
@@ -123,16 +126,16 @@ onBeforeMount(async () => {
       </n-popover>
     </div>
     <div class="content">
-      <template v-if="videoQuotesStore.getters.activeVideoQuote">
-        <template v-if="videoQuoteAudiosStore.getters.activeVideoQuoteAudios.length">
+      <template v-if="quotesStore.getters.activeVideoQuote">
+        <template v-if="audiosStore.getters.activeVideoQuoteAudios.length">
           <div
-            v-for="audio in videoQuoteAudiosStore.getters.activeVideoQuoteAudios"
+            v-for="audio in audiosStore.getters.activeVideoQuoteAudios"
             :key="audio.id"
             class="audio"
           >
             <video-quote-audio-card
               :audio="audio"
-              :checked="audio.id === videoQuotesStore.getters.activeVideoQuote.selectedAudioId"
+              :checked="audio.id === quotesStore.getters.activeVideoQuote.selectedAudioId"
               :invalid-reason="methods.getInvalidReason(audio)"
               @checked="methods.handleChange(audio.id!)"
               @delete="methods.deleteAudio(audio)"
