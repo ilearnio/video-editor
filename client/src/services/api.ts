@@ -24,7 +24,7 @@ api.interceptors.response.use(
   },
   (error) => {
     // const userStore = useUserStore()
-    // 401 Unauthorized (not auth); 419 Session expired
+    // 401 Unauthorized; 419 Session expired
     if ([401, 419].includes(error.response?.status)) {
       // userStore.logoutUser()
       return Promise.reject(error)

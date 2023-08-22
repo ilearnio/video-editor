@@ -1,6 +1,7 @@
 {
+  "@schema": "https://json.schemastore.org/tsconfig.json",
   "extends": "@vue/tsconfig/tsconfig.json",
-  "include": ["vite.config.*"],
+  "include": ["vite.config.*", "vitest.config.*"],
   "compilerOptions": {
     "composite": true,
     "types": ["node"]

@@ -11,6 +11,7 @@ import {
   ExpandMoreOutlined as ExpandIcon,
 } from '@vicons/material'
 
+import { stripTags } from '@/helpers/html'
 import { upperFirst } from '@/helpers/strings'
 import { VideoQuote } from '@/models/videoQuotes'
 import { getInvalidReason } from '@/services/videoQuotes'
@@ -82,6 +83,10 @@ const getters = {
       return 'Audio must be selected.'
     }
 
+    if (quote.content !== '' && methods.isDuplicateQuote(quote)) {
+      return 'This quote is a duplicate of another quote.'
+    }
+
     if (!selectedAudio) return ''
 
     return getInvalidReason(
@@ -93,6 +98,14 @@ const getters = {
 }
 
 const methods = {
+  isDuplicateQuote(quote: VideoQuote) {
+    const quotes = quotesStore.state.videoQuotes
+    const duplicateQuote = quotes.find(
+      (q) => q.id !== quote.id && stripTags(q.content).trim() === stripTags(quote.content).trim(),
+    )
+    return !!duplicateQuote
+  },
+
   async toggleHTML(quote: VideoQuote) {
     quotesStore.actions.setVideoQuoteProperty(quote.id!, 'isHtmlEnabled', !quote.isHtmlEnabled)
     await quotesStore.actions.updateVideoQuote(quote.id!)
@@ -199,10 +212,12 @@ const methods = {
     }
   },
 
-  async handleInputBlur(quoteId: string) {
+  async handleInputBlur(quote: VideoQuote) {
     if (data.hasQuoteChanged) {
       data.hasQuoteChanged = false
-      await quotesStore.actions.updateVideoQuote(quoteId)
+      quote.content = quote.content.trim().replace(/\.$/g, '')
+      quotesStore.actions.setVideoQuoteProperty(quote.id!, 'content', quote.content)
+      await quotesStore.actions.updateVideoQuote(quote.id!)
     }
   },
 
@@ -252,7 +267,7 @@ const methods = {
         @keydown="methods.handleInputKeydown"
         @paste="methods.handleInputPaste"
         @input="methods.handleInputEvent"
-        @blur="methods.handleInputBlur(quote.id!)"
+        @blur="methods.handleInputBlur(quote)"
         @update:value="quotesStore.actions.setVideoQuoteProperty(quote.id!, 'content', $event)"
       />
       <div v-else class="text-content">
